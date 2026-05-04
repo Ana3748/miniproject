@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viewsettings>
+
+    <scheme name="RIT_Adaptive_Traffic">
+
+        <!-- ── BACKGROUND ── -->
+        <background backgroundColor="44,62,80"
+                    showGrid="0"
+                    gridXSize="100"
+                    gridYSize="100"/>
+
+        <!-- ── ROADS / EDGES ── -->
+        <edges>
+            <colorScheme name="uniform">
+                <entry color="52,73,94"/>
+            </colorScheme>
+            <edgeValue value="0"/>
+            <showEdgeName value="0"/>
+            <edgeNameSize value="50"/>
+        </edges>
+
+        <!-- ── LANES ── -->
+        <lanes>
+            <colorScheme name="uniform">
+                <entry color="52,73,94"/>
+            </colorScheme>
+            <showLinkDecals value="1"/>
+            <showLaneBorders value="1"/>
+            <laneWidth value="3.5"/>
+            <laneShowDirection value="1"/>
+            <showLinkRules value="1"/>
+        </lanes>
+
+        <!-- ── JUNCTIONS ── -->
+        <junctions>
+            <colorScheme name="uniform">
+                <entry color="44,62,80"/>
+            </colorScheme>
+            <drawShape value="1"/>
+            <drawCrossingsAndWalkingareas value="1"/>
+        </junctions>
+
+        <!-- ── VEHICLES ── -->
+        <vehicles>
+            <colorScheme name="given/assigned vehicle color"/>
+            <vehicleQuality value="2"/>
+            <showBlinker value="1"/>
+            <vehicleSize value="14.00"/>
+            <showMinGap value="1"/>
+            <vehicleName value="0,0,0,0"/>
+        </vehicles>
+
+        <!-- ── TRAFFIC LIGHTS ── -->
+        <!-- TLS indicators appear as colored circles at lane ends.
+             drawLinkTLIndex=1 shows the phase index number.
+             linkTLSize controls the circle radius in pixels.        -->
+        <tls>
+            <drawLinkTLIndex value="1"/>
+            <drawLinkIndex value="0"/>
+            <showLinkDecals value="1"/>
+            <linkTLSize value="20"/>
+        </tls>
+
+        <!-- ── POLYGONS (YOLO detection zones added via additional file) ── -->
+        <polys>
+            <colorScheme name="given"/>
+            <polySize value="0"/>
+            <polyName value="0,0,0,0"/>
+        </polys>
+
+    </scheme>
+
+    <!-- Start centered on junction (x=0,y=0) at zoom 500 -->
+    <viewport zoom="0" x="0" y="0" angle="0"/>
+
+    <!-- 150ms delay makes motion smooth but visible -->
+    <delay value="150"/>
+
+</viewsettings>

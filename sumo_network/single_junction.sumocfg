@@ -1,0 +1,15 @@
+<configuration>
+    <input>
+        <net-file value="single_junction.net.xml"/>
+        <route-files value="single_junction.rou.xml"/>
+        <additional-files value="additional.add.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+        <end value="3600"/>
+        <step-length value="0.1"/>
+    </time>
+    <gui_only>
+        <gui-settings-file value="gui-settings.xml"/>
+    </gui_only>
+</configuration>

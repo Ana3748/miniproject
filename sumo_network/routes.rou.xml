@@ -1,0 +1,28 @@
+<routes>
+    <vType id="car" vClass="passenger" color="0,0,255"/>
+    <vType id="car2" vClass="passenger" color="0,255,0"/>
+    <vType id="car3" vClass="passenger" color="255,255,0"/>
+    <vType id="emergency" vClass="emergency" color="1,0,0"/>
+
+    <!-- Regular cars -->
+    <vehicle id="c0" type="car" depart="0"><route edges="A0B0 B0C0"/></vehicle>
+    <vehicle id="c1" type="car2" depart="1"><route edges="A1B1 B1C1"/></vehicle>
+    <vehicle id="c2" type="car3" depart="2"><route edges="A2B2 B2C2"/></vehicle>
+    <vehicle id="c3" type="car" depart="3"><route edges="A0B0 B0B1 B1C1"/></vehicle>
+    <vehicle id="c4" type="car2" depart="4"><route edges="A2B2 B2B1 B1A1"/></vehicle>
+    <vehicle id="c5" type="car3" depart="5"><route edges="A0B0 B0B1 B1B2 B2C2"/></vehicle>
+    <vehicle id="c6" type="car" depart="6"><route edges="A1B1 B1B0 B0C0"/></vehicle>
+    <vehicle id="c7" type="car2" depart="7"><route edges="A2B2 B2C2"/></vehicle>
+    <vehicle id="c8" type="car3" depart="8"><route edges="A0B0 B0C0"/></vehicle>
+    <vehicle id="c9" type="car" depart="9"><route edges="A1B1 B1C1"/></vehicle>
+    <vehicle id="c10" type="car2" depart="10"><route edges="A2B2 B2B1 B1B0 B0C0"/></vehicle>
+    <vehicle id="c11" type="car3" depart="11"><route edges="A0B0 B0B1 B1C1"/></vehicle>
+    <vehicle id="c12" type="car" depart="12"><route edges="A1B1 B1B2 B2C2"/></vehicle>
+    <vehicle id="c13" type="car2" depart="13"><route edges="A2B2 B2C2"/></vehicle>
+    <vehicle id="c14" type="car3" depart="14"><route edges="A0B0 B0C0"/></vehicle>
+
+    <!-- Emergency vehicle -->
+    <vehicle id="ev0" type="emergency" depart="5">
+        <route edges="A0B0 B0B1 B1B2 B2C2"/>
+    </vehicle>
+</routes>
