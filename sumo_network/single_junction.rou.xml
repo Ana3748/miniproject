@@ -76,7 +76,10 @@
          then see preemption kick in when it approaches the junction.
          Travels west_in → east_out (phase 3 = green for this corridor).
     ════════════════════════════════════════════════════════════════════ -->
-    <vehicle id="ev0" type="emergency" depart="100">
+    <vehicle id="ev0" type="emergency" depart="10">
+        <route edges="west_in east_out"/>
+    </vehicle>
+    <vehicle id="ev1" type="emergency" depart="75">
         <route edges="west_in east_out"/>
     </vehicle>
 

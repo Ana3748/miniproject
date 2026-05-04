@@ -393,10 +393,18 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
         while traci.simulation.getMinExpectedNumber() > 0:
             traci.simulationStep()
 
-            has_ev = any(
-                traci.vehicle.getTypeID(v) == "emergency"
-                for v in traci.vehicle.getIDList()
-            )
+            has_ev = False
+            for vid in traci.vehicle.getIDList():
+                if traci.vehicle.getTypeID(vid) == cfg.emergency_vehicle_type:
+                    has_ev = True
+                    if cfg.use_gui:
+                        try:
+                            traci.vehicle.setColor(vid, (255, 0, 0, 255)) # Highlight red
+                            traci.gui.trackVehicle("View #0", vid)        # Follow it
+                            traci.gui.setZoom("View #0", 3000)            # Zoom in tight
+                        except traci.TraCIException:
+                            pass
+                    break
 
             # ── 1. Emergency preemption (every step) ────────────────────────
             preemptor.step(step)
