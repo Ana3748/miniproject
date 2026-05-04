@@ -38,8 +38,8 @@ log = logging.getLogger("YOLODetector")
 class DetectorConfig:
     # Model weights — place .pt files in the same folder as this script,
     # or provide full paths.
-    primary_weights: str   = "yolo11m.pt"    # YOLOv11 Medium
-    secondary_weights: str = "yolo26m.pt"    # YOLO26 Medium
+    primary_weights: str   = "models/yolo11m.pt"    # YOLOv11 Medium
+    secondary_weights: str = "models/yolo26m.pt"    # YOLO26 Medium
 
     # Inference settings
     imgsz: int             = 640
@@ -285,9 +285,40 @@ _detector: Optional[DualYOLODetector] = None
 _source:   Optional[FrameSource]      = None
 
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# MODEL PATH RESOLVER  (looks in models/ folder — never auto-downloads)
+# ──────────────────────────────────────────────────────────────────────────────
+def _resolve_model_path(name: str) -> str:
+    """
+    Resolve a YOLO weight path without ever auto-downloading.
+
+    Search order:
+      1. Exact path as given (e.g. absolute path, or 'models/yolo11m.pt')
+      2. models/<basename> relative to this script's directory
+
+    Raises FileNotFoundError if the file cannot be found locally.
+    Put your .pt files in the models/ folder (it is in .gitignore so
+    it is never pushed to Git, but it IS on disk and will be used here).
+    """
+    p = Path(name)
+    if p.exists():
+        return str(p)
+    candidate = Path(__file__).parent / "models" / p.name
+    if candidate.exists():
+        return str(candidate)
+    raise FileNotFoundError(
+        f"Model weights not found: '{name}'\n"
+        f"  Checked : {p.resolve()}\n"
+        f"  Checked : {candidate.resolve()}\n"
+        f"  Fix     : Place your .pt files inside the 'models/' folder.\n"
+        f"  The models/ folder is in .gitignore — exists on disk, not pushed to Git."
+    )
+
+
 def init_yolo(
-    primary_weights: str   = "yolo11m.pt",
-    secondary_weights: str = "yolo26m.pt",
+    primary_weights: str   = "models/yolo11m.pt",
+    secondary_weights: str = "models/yolo26m.pt",
     video_source             = 0,
     device: str            = "auto",
 ) -> None:
@@ -299,7 +330,7 @@ def init_yolo(
 
     Example in adaptive_traffic_traci_bridge.py:
         from yolo_detector import init_yolo, get_yolo_vehicle_counts
-        init_yolo("yolo11m.pt", "yolo26m.pt", "frames/")
+        init_yolo("models/yolo11m.pt", "models/yolo26m.pt", "frames/")
     """
     global _detector, _source
 
@@ -307,6 +338,9 @@ def init_yolo(
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
     log.info("YOLO running on device: %s", device)
+
+    primary_weights   = _resolve_model_path(primary_weights)
+    secondary_weights = _resolve_model_path(secondary_weights)
 
     cfg = DetectorConfig(
         primary_weights=primary_weights,

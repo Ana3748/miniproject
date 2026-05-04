@@ -432,7 +432,7 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
 
     log.info("Starting SUMO: %s", " ".join(sumo_cmd))
     traci.start(sumo_cmd)
-    init_yolo("yolo11m.pt", "yolo26m.pt", video_source=VIDEO_OR_IMAGE_SOURCE)
+    init_yolo("models/yolo11m.pt", "models/yolo26m.pt", video_source=VIDEO_OR_IMAGE_SOURCE)
 
     gps_sim   = GPSSimulator(cfg)
     preemptor = EmergencyPreemptor(cfg, gps_sim)
