@@ -1,5 +1,4 @@
 traci
 opencv-python
 numpy
-torch
-ultralytics
+
