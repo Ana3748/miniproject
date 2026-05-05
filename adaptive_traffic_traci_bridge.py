@@ -234,8 +234,15 @@ class EmergencyPreemptor:
         self, tls_id: str, vehicle_id: str, sim_step: int
     ) -> None:
         """Override TLS to green for the emergency vehicle's approach."""
-        emergency_phase = self.cfg.tls_emergency_phase.get(tls_id, 0)
         try:
+            edge_id = traci.vehicle.getRoadID(vehicle_id)
+            if edge_id in ["north_in", "south_in"]:
+                emergency_phase = 0
+            elif edge_id in ["east_in", "west_in"]:
+                emergency_phase = 3
+            else:
+                emergency_phase = self.cfg.tls_emergency_phase.get(tls_id, 0)
+
             # Switch to the designated emergency green phase immediately
             traci.trafficlight.setPhase(tls_id, emergency_phase)
             # Lock this phase for the full preemption window

@@ -55,7 +55,7 @@
              drawLinkTLIndex=1 shows the phase index number.
              linkTLSize controls the circle radius in pixels.        -->
         <tls>
-            <drawLinkTLIndex value="1"/>
+            <drawLinkTLIndex value="0"/>
             <drawLinkIndex value="0"/>
             <showLinkDecals value="1"/>
             <linkTLSize value="20"/>

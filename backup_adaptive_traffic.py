@@ -245,8 +245,15 @@ class EmergencyPreemptor:
         return nearest_id, nearest_dist
 
     def _activate_preemption(self, tls_id: str, vehicle_id: str, sim_step: int) -> None:
-        emergency_phase = self.cfg.tls_emergency_phase.get(tls_id, 0)
         try:
+            edge_id = traci.vehicle.getRoadID(vehicle_id)
+            if edge_id in ["north_in", "south_in"]:
+                emergency_phase = 0
+            elif edge_id in ["east_in", "west_in"]:
+                emergency_phase = 3
+            else:
+                emergency_phase = self.cfg.tls_emergency_phase.get(tls_id, 0)
+                
             traci.trafficlight.setPhase(tls_id, emergency_phase)
             traci.trafficlight.setPhaseDuration(tls_id, self.cfg.preemption_green_duration)
             self._preempted[tls_id] = True

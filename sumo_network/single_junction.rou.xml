@@ -80,7 +80,7 @@
         <route edges="west_in east_out"/>
     </vehicle>
     <vehicle id="ev1" type="emergency" depart="75">
-        <route edges="west_in east_out"/>
+        <route edges="north_in east_out"/>
     </vehicle>
 
 </routes>
