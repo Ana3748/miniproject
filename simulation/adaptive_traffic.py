@@ -52,6 +52,7 @@ class Config:
     step_length: float = 0.1          # seconds per simulation step
 
     # --- Emergency Preemption ---
+    use_emergency: bool = False       # Set via --emergency flag
     preemption_radius_m: float = 150.0
     emergency_vehicle_type: str = "emergency"
     preemption_green_duration: float = 30.0
@@ -400,21 +401,20 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
         while traci.simulation.getMinExpectedNumber() > 0:
             traci.simulationStep()
 
-            has_ev = False
-            for vid in traci.vehicle.getIDList():
-                if traci.vehicle.getTypeID(vid) == cfg.emergency_vehicle_type:
-                    has_ev = True
-                    if cfg.use_gui:
-                        try:
-                            traci.vehicle.setColor(vid, (255, 0, 0, 255)) # Highlight red
-                            traci.gui.trackVehicle("View #0", vid)        # Follow it
-                            traci.gui.setZoom("View #0", 3000)            # Zoom in tight
-                        except traci.TraCIException:
-                            pass
-                    break
-
-            # ── 1. Emergency preemption (every step) ────────────────────────
-            preemptor.step(step)
+            # ── 1. Emergency preemption (optional) ──────────────────────────
+            if cfg.use_emergency:
+                has_ev = False
+                for vid in traci.vehicle.getIDList():
+                    if traci.vehicle.getTypeID(vid) == cfg.emergency_vehicle_type:
+                        has_ev = True
+                        if cfg.use_gui:
+                            try:
+                                # Visual highlight only, no zoom/lock
+                                traci.vehicle.setColor(vid, (255, 0, 0, 255))
+                            except traci.TraCIException:
+                                pass
+                        break
+                preemptor.step(step)
 
             # ── 2. Adaptive control (once per second) ───────────────────────
             steps_per_second = int(1.0 / cfg.step_length)
@@ -429,19 +429,20 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
                     _print_diagnostic_table(step, cfg, preemptor, gps_sim, yolo_cache)
 
             # ── 3. EV GPS debug logging ─────────────────────────────────────
-            for vid in traci.vehicle.getIDList():
-                if traci.vehicle.getTypeID(vid) == cfg.emergency_vehicle_type:
-                    true_pos  = traci.vehicle.getPosition(vid)
-                    speed_mps = traci.vehicle.getSpeed(vid)
-                    reported  = gps_sim.get_reported_position(vid)
-                    if reported:
-                        error_m = euclidean_distance(true_pos, reported)
-                        log.debug(
-                            "EV %s | true=(%.1f,%.1f) reported=(%.1f,%.1f)"
-                            " err=%.2fm speed=%.1fm/s",
-                            vid, true_pos[0], true_pos[1],
-                            reported[0], reported[1], error_m, speed_mps,
-                        )
+            if cfg.use_emergency:
+                for vid in traci.vehicle.getIDList():
+                    if traci.vehicle.getTypeID(vid) == cfg.emergency_vehicle_type:
+                        true_pos  = traci.vehicle.getPosition(vid)
+                        speed_mps = traci.vehicle.getSpeed(vid)
+                        reported  = gps_sim.get_reported_position(vid)
+                        if reported:
+                            error_m = euclidean_distance(true_pos, reported)
+                            log.debug(
+                                "EV %s | true=(%.1f,%.1f) reported=(%.1f,%.1f)"
+                                " err=%.2fm speed=%.1fm/s",
+                                vid, true_pos[0], true_pos[1],
+                                reported[0], reported[1], error_m, speed_mps,
+                            )
 
             step += 1
 
@@ -469,6 +470,10 @@ if __name__ == "__main__":
         help="Launch sumo-gui instead of headless sumo",
     )
     parser.add_argument(
+        "--emergency", action="store_true",
+        help="Enable emergency vehicle preemption logic",
+    )
+    parser.add_argument(
         "--radius", type=float, default=150.0,
         help="Emergency preemption trigger radius in metres (default: 150)",
     )
@@ -493,6 +498,7 @@ if __name__ == "__main__":
     cfg = Config(
         sumo_cfg=args.config,
         use_gui=args.gui,
+        use_emergency=args.emergency,
         preemption_radius_m=args.radius,
         gps_lag_steps=args.lag,
         gps_noise_sigma_m=args.noise,

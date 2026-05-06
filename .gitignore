@@ -1,3 +1,7 @@
 __pycache__/
 models/
 .venv/
+.env
+assets/
+graphify-out/
+.gemini/
