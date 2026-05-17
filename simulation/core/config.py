@@ -22,6 +22,13 @@ class Config:
     base_green: float = 15.0
     vehicles_per_unit: int = 5
 
+    # --- Demand Source / Dynamic Spawning ---
+    demand_source: str = "static_xml"      # static_xml | dynamic_python
+    dynamic_sumo_cfg: str = "sumo_network/single_junction_dynamic.sumocfg"
+    spawn_provider_mode: str = "hardcoded" # hardcoded | random
+    spawn_interval_s: float = 1.0
+    spawn_max_per_class_per_lane: int = 30
+
     # --- GPS Lag / Inaccuracy ---
     gps_lag_steps: int = 10
     gps_noise_sigma_m: float = 3.0

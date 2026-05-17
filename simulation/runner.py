@@ -13,15 +13,21 @@ from simulation.core.gps import GPSSimulator
 from simulation.interfaces.providers import VehicleCountProvider
 from simulation.logic.preemption import EmergencyPreemptor
 from simulation.logic.adaptive import AdaptiveController
+from simulation.logic.spawner import DynamicSpawner
 from simulation.logic.diagnostics import _print_diagnostic_table
 
 log = setup_logging("TraCI-Bridge-Modular")
 
 def run_simulation(cfg: Config, test_mode: bool = False) -> None:
+    active_sumo_cfg = cfg.sumo_cfg
+    dynamic_enabled = cfg.demand_source == "dynamic_python"
+    if dynamic_enabled:
+        active_sumo_cfg = cfg.dynamic_sumo_cfg
+
     binary = "sumo-gui" if cfg.use_gui else "sumo"
     sumo_cmd = [
         binary,
-        "-c", cfg.sumo_cfg,
+        "-c", active_sumo_cfg,
         "--step-length", str(cfg.step_length),
         "--no-warnings",
         "--collision.action", "warn",
@@ -30,8 +36,8 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
     log.info("Starting SUMO: %s", " ".join(sumo_cmd))
     traci.start(sumo_cmd)
 
-    # Vehicle count provider (Random)
-    count_provider = VehicleCountProvider()
+    count_provider = VehicleCountProvider(mode=cfg.spawn_provider_mode)
+    spawner = DynamicSpawner(cfg) if dynamic_enabled else None
 
     gps_sim   = GPSSimulator(cfg)
     preemptor = EmergencyPreemptor(cfg, gps_sim)
@@ -39,6 +45,7 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
 
     # Cache latest counts for diagnostic display
     counts_cache: dict[str, dict] = {}
+    spawn_cache: dict[str, dict[str, int]] = {}
 
     if test_mode:
         print("\n── TEST / DIAGNOSTIC MODE ACTIVE ──────────────────────────────────────────")
@@ -66,16 +73,22 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
                 preemptor.step(step)
 
             # ── 2. Adaptive control (once per second) ───────────────────────
-            steps_per_second = int(1.0 / cfg.step_length)
+            steps_per_second = max(1, int(1.0 / cfg.step_length))
+            steps_per_spawn = max(1, int(cfg.spawn_interval_s / cfg.step_length))
             if step % steps_per_second == 0:
                 for tls_id in traci.trafficlight.getIDList():
                     if not preemptor._preempted.get(tls_id, False):
-                        counts = count_provider.get_counts(tls_id)
+                        lane_class_counts = count_provider.get_lane_class_counts(tls_id)
+                        counts = count_provider.totals_from_lane_class_counts(lane_class_counts)
                         counts_cache[tls_id] = counts
                         adaptive.apply(tls_id, counts, preemptor)
 
+                        if dynamic_enabled and spawner is not None and step % steps_per_spawn == 0:
+                            spawn_stats = spawner.spawn_for_tls(tls_id, lane_class_counts, step)
+                            spawn_cache[tls_id] = spawn_stats
+
                 if test_mode:
-                    _print_diagnostic_table(step, cfg, preemptor, gps_sim, counts_cache)
+                    _print_diagnostic_table(step, cfg, preemptor, gps_sim, counts_cache, spawn_cache)
 
             # ── 3. EV GPS debug logging ─────────────────────────────────────
             if cfg.use_emergency:
@@ -135,6 +148,35 @@ if __name__ == "__main__":
         "--test", action="store_true",
         help="Enable diagnostic table output every second",
     )
+    parser.add_argument(
+        "--demand-source",
+        choices=["static_xml", "dynamic_python"],
+        default="static_xml",
+        help="Traffic demand source mode",
+    )
+    parser.add_argument(
+        "--provider-mode",
+        choices=["hardcoded", "random"],
+        default="hardcoded",
+        help="Input provider mode for dynamic spawning",
+    )
+    parser.add_argument(
+        "--dynamic-config",
+        default="sumo_network/single_junction_dynamic.sumocfg",
+        help="SUMO config used when demand source is dynamic_python",
+    )
+    parser.add_argument(
+        "--spawn-interval",
+        type=float,
+        default=1.0,
+        help="Dynamic spawn interval in seconds",
+    )
+    parser.add_argument(
+        "--spawn-cap",
+        type=int,
+        default=30,
+        help="Max vehicles per class per lane per spawn tick",
+    )
     args = parser.parse_args()
 
     cfg = Config(
@@ -144,5 +186,10 @@ if __name__ == "__main__":
         preemption_radius_m=args.radius,
         gps_lag_steps=args.lag,
         gps_noise_sigma_m=args.noise,
+        demand_source=args.demand_source,
+        dynamic_sumo_cfg=args.dynamic_config,
+        spawn_provider_mode=args.provider_mode,
+        spawn_interval_s=args.spawn_interval,
+        spawn_max_per_class_per_lane=args.spawn_cap,
     )
     run_simulation(cfg, test_mode=args.test)

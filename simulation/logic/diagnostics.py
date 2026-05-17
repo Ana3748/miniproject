@@ -10,6 +10,7 @@ def _print_diagnostic_table(
     preemptor: EmergencyPreemptor,
     gps_sim: GPSSimulator,
     counts_cache: dict,
+    spawn_cache: dict | None = None,
 ) -> None:
     sim_time = step * cfg.step_length
     for tls_id in traci.trafficlight.getIDList():
@@ -32,9 +33,15 @@ def _print_diagnostic_table(
 
         counts = counts_cache.get(tls_id, {})
         counts_str = " ".join(f"{k[0].upper()}:{v}" for k, v in counts.items())
+        spawn_stats = (spawn_cache or {}).get(tls_id, {})
+        spawn_str = (
+            f"spawn[R:{spawn_stats.get('requested', 0)} "
+            f"I:{spawn_stats.get('inserted', 0)} "
+            f"F:{spawn_stats.get('failed', 0)}]"
+        )
 
         print(
             f"  t={sim_time:7.1f}s | TLS={tls_id} | ph={phase} "
             f"| state={state[:10]}… | remain={remain:5.1f}s "
-            f"| preempt={preempt} | EV={ev_dist} | counts [{counts_str}]"
+            f"| preempt={preempt} | EV={ev_dist} | counts [{counts_str}] | {spawn_str}"
         )

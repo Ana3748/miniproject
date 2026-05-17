@@ -1,0 +1,18 @@
+<routes>
+    <vType id="car" vClass="passenger" guiShape="passenger"
+           color="100,149,237" length="4.5" width="1.8" maxSpeed="13.9"/>
+    <vType id="threewheeler" vClass="moped" guiShape="motorcycle"
+           color="255,165,0" length="2.2" width="1.2" maxSpeed="11.0"/>
+    <vType id="truck" vClass="truck" guiShape="truck"
+           color="128,128,128" length="7.5" width="2.5" maxSpeed="11.5"/>
+    <vType id="emergency" vClass="emergency" guiShape="emergency"
+           color="255,0,0" length="6.5" width="2.4" maxSpeed="22.0"
+           emergencyDecel="9.0" speedFactor="1.5"/>
+
+    <vehicle id="ev0" type="emergency" depart="10">
+        <route edges="west_in east_out"/>
+    </vehicle>
+    <vehicle id="ev1" type="emergency" depart="75">
+        <route edges="north_in east_out"/>
+    </vehicle>
+</routes>
