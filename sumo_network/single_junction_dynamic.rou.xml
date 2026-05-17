@@ -9,6 +9,14 @@
            color="255,0,0" length="6.5" width="2.4" maxSpeed="22.0"
            emergencyDecel="9.0" speedFactor="1.5"/>
 
+    <!-- New: Two-Wheeler (Motorcycle/Scooter) -->
+    <vType id="twowheeler" vClass="motorcycle" guiShape="motorcycle"
+           color="50,205,50" length="1.8" width="0.8" maxSpeed="16.6"/>
+
+    <!-- New: Auto-Rickshaw -->
+    <vType id="autorickshaw" vClass="moped" guiShape="delivery"
+           color="255,215,0" length="2.6" width="1.3" maxSpeed="12.5"/>
+
     <vehicle id="ev0" type="emergency" depart="10">
         <route edges="west_in east_out"/>
     </vehicle>

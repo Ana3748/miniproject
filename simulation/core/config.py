@@ -26,8 +26,8 @@ class Config:
     demand_source: str = "static_xml"      # static_xml | dynamic_python
     dynamic_sumo_cfg: str = "sumo_network/single_junction_dynamic.sumocfg"
     spawn_provider_mode: str = "hardcoded" # hardcoded | random
-    spawn_interval_s: float = 1.0
-    spawn_max_per_class_per_lane: int = 30
+    spawn_interval_s: float = 5.0
+    spawn_max_per_class_per_lane: int = 10
 
     # --- GPS Lag / Inaccuracy ---
     gps_lag_steps: int = 10

@@ -12,6 +12,8 @@ class DynamicSpawner:
         "car": "car",
         "3 wheeler": "threewheeler",
         "truck": "truck",
+        "2 wheeler": "twowheeler",
+        "auto":"autorickshaw"
     }
 
     ROUTE_POOLS = {

@@ -13,17 +13,17 @@ class VehicleCountProvider(CountInputProvider):
     """
 
     APPROACHES = ("north", "south", "east", "west")
-    VEHICLE_CLASSES = ("car", "3 wheeler", "truck")
+    VEHICLE_CLASSES = ("car", "3 wheeler", "truck", "2 wheeler", "auto")
 
     def __init__(self, mode: str = "hardcoded", max_random_per_class: int = 6):
         self.mode = mode
         self.max_random_per_class = max_random_per_class
 
         self._hardcoded_payload: dict[str, dict[str, int]] = {
-            "north": {"car": 3, "3 wheeler": 1, "truck": 1},
-            "south": {"car": 0, "3 wheeler": 0, "truck": 0},
-            "east": {"car": 3, "3 wheeler": 1, "truck": 1},
-            "west": {"car": 3, "3 wheeler": 1, "truck": 1},
+            "north": {"car": 1, "3 wheeler": 0, "truck": 0, "2 wheeler":1, "auto":0},
+            "south": {"car": 0, "3 wheeler": 0, "truck": 0, "2 wheeler":0, "auto":0},
+            "east": {"car": 1, "3 wheeler": 0, "truck": 0, "2 wheeler":1, "auto":6},
+            "west": {"car": 1, "3 wheeler": 1, "truck": 1 , "2 wheeler":0, "auto":0},
         }
 
         log.info("VehicleCountProvider mode=%s", self.mode)
