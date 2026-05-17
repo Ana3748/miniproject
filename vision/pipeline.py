@@ -12,12 +12,30 @@ def main():
     log.info("Starting Vision Pipeline...")
     sources = utils.get_video_sources()
     
+    if not sources:
+        log.error("No valid video files found in assets/videos/. Check your naming convention.")
+        sys.exit(1)
+        
     try:
         v_detector = detector.VehicleDetector()
     except Exception as e:
         log.error(f"Initialization Error: {e}")
         sys.exit(1)
         
+    # --- ROI Setup Phase ---
+    rois = {}
+    ordered_directions = ["north", "south", "east", "west"]
+    
+    for dir_name in ordered_directions:
+        if dir_name in sources:
+            cap = cv2.VideoCapture(sources[dir_name])
+            ret, frame = cap.read()
+            if ret:
+                poly = utils.select_roi(dir_name, frame)
+                rois[dir_name] = poly
+            cap.release()
+            
+    # --- Main Inference Loop ---
     caps = {dir_name: cv2.VideoCapture(path) for dir_name, path in sources.items()}
     current_counts = {dir_name: 0 for dir_name in sources}
     last_inference_time = 0
@@ -39,7 +57,9 @@ def main():
                 
                 if ret:
                     if run_inference:
-                        count, annotated = v_detector.detect(frame)
+                        # Pass ROI to detector
+                        poly = rois.get(dir_name)
+                        count, annotated = v_detector.detect(frame, roi_polygon=poly)
                         current_counts[dir_name] = count
                         frames_to_display[dir_name] = annotated
             

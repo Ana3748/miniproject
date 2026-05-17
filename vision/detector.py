@@ -1,8 +1,10 @@
 # vision/detector.py
 import os
 import logging
+import cv2
+import numpy as np
 from ultralytics import YOLO
-from vision import config
+from vision import config, utils
 
 log = logging.getLogger("Vision-Detector")
 
@@ -21,22 +23,56 @@ class VehicleDetector:
         self.model = YOLO(model_path)
         
         # By default, we track all classes found in the model metadata.
-        # This is safer for custom-trained models where indices differ from COCO.
         self.target_classes = list(self.model.names.keys())
         log.info(f"Tracking {len(self.target_classes)} classes: {self.model.names}")
 
-    def detect(self, frame):
+    def detect(self, frame, roi_polygon: list[tuple[int, int]] = None):
         """
         Runs inference on a single frame and returns counts and annotated frame.
+        Applies ROI masking and center-point filtering if roi_polygon is provided.
         """
-        # We track target_classes defined in __init__
-        results = self.model(frame, classes=self.target_classes, verbose=False)
+        inference_frame = frame
+        
+        if roi_polygon:
+            # 1. Create mask
+            mask = np.zeros(frame.shape[:2], dtype=np.uint8)
+            poly_np = np.array(roi_polygon, dtype=np.int32)
+            cv2.fillPoly(mask, [poly_np], 255)
+            
+            # 2. Apply mask to frame (for YOLO to ignore background)
+            inference_frame = cv2.bitwise_and(frame, frame, mask=mask)
+
+        # 3. Run Inference
+        results = self.model(inference_frame, classes=self.target_classes, verbose=False)
         result = results[0]
         
-        # Count occurrences of all detected objects in target classes
-        counts = len(result.boxes)
+        valid_boxes = []
+        for box in result.boxes:
+            # Get box coordinates (x1, y1, x2, y2)
+            coords = box.xyxy[0].cpu().numpy()
+            center_x = (coords[0] + coords[2]) / 2
+            center_y = (coords[1] + coords[3]) / 2
+            
+            # 4. Filter by Center Point
+            if roi_polygon:
+                if utils.is_inside_poly((int(center_x), int(center_y)), roi_polygon):
+                    valid_boxes.append(box)
+            else:
+                valid_boxes.append(box)
         
-        # Get annotated frame (drawing bounding boxes)
-        annotated_frame = result.plot()
+        # 5. Visual Feedback: Draw ROI and filtered detections
+        annotated_frame = frame.copy()
         
-        return counts, annotated_frame
+        if roi_polygon:
+            # Draw ROI outline
+            cv2.polylines(annotated_frame, [poly_np], True, (0, 255, 255), 2)
+            
+        # Draw only valid boxes manually or use plot() on a filtered result
+        # To keep it simple, we'll let plot() handle it but on the masked inference
+        # result, then overlay it on the original frame.
+        # Actually, let's just use the plot() from the inference and overlay ROI.
+        annotated_frame = result.plot() 
+        if roi_polygon:
+             cv2.polylines(annotated_frame, [poly_np], True, (0, 255, 255), 2)
+
+        return len(valid_boxes), annotated_frame

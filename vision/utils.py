@@ -28,6 +28,57 @@ def get_video_sources() -> dict[str, str]:
             
     return sources
 
+def select_roi(direction: str, frame: np.ndarray) -> list[tuple[int, int]]:
+    """
+    Opens a window to let user draw a polygon ROI.
+    """
+    points = []
+    win_name = f"Draw ROI - {direction.upper()} (Enter=Confirm, R=Reset)"
+    
+    def mouse_callback(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            points.append((x, y))
+
+    cv2.namedWindow(win_name)
+    cv2.setMouseCallback(win_name, mouse_callback)
+
+    while True:
+        display_frame = frame.copy()
+        
+        # Draw current points and lines
+        for i, pt in enumerate(points):
+            cv2.circle(display_frame, pt, 5, (0, 0, 255), -1)
+            if i > 0:
+                cv2.line(display_frame, points[i-1], pt, (0, 255, 0), 2)
+        
+        if len(points) > 2:
+            cv2.line(display_frame, points[-1], points[0], (0, 255, 0), 2)
+
+        cv2.imshow(win_name, display_frame)
+        key = cv2.waitKey(1) & 0xFF
+        
+        if key == 13: # Enter
+            if len(points) < 3:
+                print("Please select at least 3 points for a polygon.")
+            else:
+                break
+        elif key == ord('r'):
+            points.clear()
+        elif key == ord('q'):
+            # Allow quitting early
+            break
+
+    cv2.destroyWindow(win_name)
+    return points
+
+def is_inside_poly(point: tuple[int, int], polygon: list[tuple[int, int]]) -> bool:
+    """
+    Checks if a point (x, y) is inside a polygon.
+    """
+    poly_np = np.array(polygon, dtype=np.int32)
+    dist = cv2.pointPolygonTest(poly_np, (float(point[0]), float(point[1])), False)
+    return dist >= 0
+
 def create_grid(frames_dict: dict[str, np.ndarray], counts_dict: dict[str, int]) -> np.ndarray:
     """
     Arranges 1-4 frames into a single canvas (1x1, 1x2, or 2x2).
