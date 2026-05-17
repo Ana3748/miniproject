@@ -1,4 +1,5 @@
 traci
 opencv-python
 numpy
+ultralytics
 
