@@ -28,7 +28,7 @@ class VehicleDetector:
 
     def detect(self, frame, roi_polygon: list[tuple[int, int]] = None):
         """
-        Runs inference on a single frame and returns counts and annotated frame.
+        Runs inference on a single frame and returns class-wise counts and annotated frame.
         Applies ROI masking and center-point filtering if roi_polygon is provided.
         """
         inference_frame = frame
@@ -60,19 +60,17 @@ class VehicleDetector:
             else:
                 valid_boxes.append(box)
         
-        # 5. Visual Feedback: Draw ROI and filtered detections
-        annotated_frame = frame.copy()
-        
-        if roi_polygon:
-            # Draw ROI outline
-            cv2.polylines(annotated_frame, [poly_np], True, (0, 255, 255), 2)
+        # 5. Count by Class
+        class_counts = {}
+        for box in valid_boxes:
+            cls_id = int(box.cls[0])
+            cls_name = self.model.names[cls_id]
+            class_counts[cls_name] = class_counts.get(cls_name, 0) + 1
             
-        # Draw only valid boxes manually or use plot() on a filtered result
-        # To keep it simple, we'll let plot() handle it but on the masked inference
-        # result, then overlay it on the original frame.
-        # Actually, let's just use the plot() from the inference and overlay ROI.
+        # 6. Visual Feedback: Draw ROI and filtered detections
         annotated_frame = result.plot() 
         if roi_polygon:
+             poly_np = np.array(roi_polygon, dtype=np.int32)
              cv2.polylines(annotated_frame, [poly_np], True, (0, 255, 255), 2)
 
-        return len(valid_boxes), annotated_frame
+        return class_counts, annotated_frame

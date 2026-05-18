@@ -10,8 +10,7 @@ OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs")
 
 # --- Model Configuration ---
 # The .pt file must exist in the models/ directory
-MODEL_WEIGHTS = "yolo11m.pt"
-
+MODEL_WEIGHTS = "VehicleNet-Y26m.pt"
 # --- Pipeline Configuration ---
 TARGET_FPS = 5.0          # How often to run YOLO inference
 MIN_FRAME_DELAY_MS = 1    # Minimum wait between frames to keep UI responsive

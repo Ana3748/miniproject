@@ -37,7 +37,7 @@ def main():
             
     # --- Main Inference Loop ---
     caps = {dir_name: cv2.VideoCapture(path) for dir_name, path in sources.items()}
-    current_counts = {dir_name: 0 for dir_name in sources}
+    current_counts = {dir_name: {} for dir_name in sources}
     last_inference_time = 0
     inference_interval = 1.0 / config.TARGET_FPS
     
@@ -59,8 +59,18 @@ def main():
                     if run_inference:
                         # Pass ROI to detector
                         poly = rois.get(dir_name)
-                        count, annotated = v_detector.detect(frame, roi_polygon=poly)
-                        current_counts[dir_name] = count
+                        counts, annotated = v_detector.detect(frame, roi_polygon=poly)
+                        
+                        # Check for changes and log to terminal
+                        if counts != current_counts[dir_name]:
+                            active = {k: v for k, v in counts.items() if v > 0}
+                            total = sum(active.values())
+                            print(f"\n[CHANGE] {dir_name.upper()} | Total: {total}")
+                            for cls, count in active.items():
+                                print(f"  - {cls}: {count}")
+                            
+                            current_counts[dir_name] = counts
+                            
                         frames_to_display[dir_name] = annotated
             
             if run_inference:
@@ -73,7 +83,9 @@ def main():
             if key == ord('q'):
                 break
             elif key == ord('c') or key == ord(' '):
-                exporter.export_counts(current_counts)
+                # For backward compatibility with exporter, we'll send total counts
+                total_counts = {d: sum(c.values()) for d, c in current_counts.items()}
+                exporter.export_counts(total_counts)
                 
     except KeyboardInterrupt:
         pass

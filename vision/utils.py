@@ -79,10 +79,11 @@ def is_inside_poly(point: tuple[int, int], polygon: list[tuple[int, int]]) -> bo
     dist = cv2.pointPolygonTest(poly_np, (float(point[0]), float(point[1])), False)
     return dist >= 0
 
-def create_grid(frames_dict: dict[str, np.ndarray], counts_dict: dict[str, int]) -> np.ndarray:
+def create_grid(frames_dict: dict[str, np.ndarray], counts_dict: dict[str, dict[str, int]]) -> np.ndarray:
     """
     Arranges 1-4 frames into a single canvas (1x1, 1x2, or 2x2).
     Preserves aspect ratio based on config.TARGET_HEIGHT.
+    Expects counts_dict to be {direction: {class_name: count}}
     """
     directions = list(frames_dict.keys())
     num_feeds = len(directions)
@@ -97,7 +98,7 @@ def create_grid(frames_dict: dict[str, np.ndarray], counts_dict: dict[str, int])
     processed_frames = []
     for dir_name in directions:
         frame = frames_dict[dir_name]
-        count = counts_dict[dir_name]
+        class_counts = counts_dict.get(dir_name, {})
         
         # Preserve aspect ratio
         h, w = frame.shape[:2]
@@ -106,12 +107,28 @@ def create_grid(frames_dict: dict[str, np.ndarray], counts_dict: dict[str, int])
         
         resized = cv2.resize(frame, (target_width, config.TARGET_HEIGHT))
         
-        # Draw overlay background for text
-        cv2.rectangle(resized, (0, 0), (min(200, target_width), 40), (0, 0, 0), -1)
+        # Draw overlay background for text (Dynamic height based on number of classes)
+        # Filter for non-zero counts
+        active_counts = {k: v for k, v in class_counts.items() if v > 0}
+        total_count = sum(active_counts.values())
         
-        label = f"{dir_name.upper()}: {count}"
-        cv2.putText(resized, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
-                    config.FONT_SCALE, config.FONT_COLOR, config.FONT_THICKNESS)
+        display_lines = [f"{dir_name.upper()}: Total {total_count}"]
+        for cls, count in active_counts.items():
+            display_lines.append(f"  {cls}: {count}")
+
+        overlay_h = 30 + (len(display_lines) * 25)
+        overlay_w = min(250, target_width)
+        
+        # Semi-transparent black box
+        overlay = resized.copy()
+        cv2.rectangle(overlay, (0, 0), (overlay_w, overlay_h), (0, 0, 0), -1)
+        cv2.addWeighted(overlay, 0.6, resized, 0.4, 0, resized)
+        
+        # Draw lines
+        for i, line in enumerate(display_lines):
+            y_pos = 25 + (i * 25)
+            cv2.putText(resized, line, (10, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 
+                        config.FONT_SCALE * 0.8, config.FONT_COLOR, config.FONT_THICKNESS - 1)
         
         processed_frames.append(resized)
 
