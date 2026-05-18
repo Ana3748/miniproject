@@ -6,27 +6,89 @@ from simulation.interfaces.count_provider import CountInputProvider
 log = logging.getLogger("TraCI-Bridge-Modular")
 
 
-class VehicleCountProvider(CountInputProvider):
-    """
-    Provides lane-class counts for dynamic spawning and
-    per-approach totals for adaptive control.
-    """
+class VehicleCountProvider:
 
     APPROACHES = ("north", "south", "east", "west")
     VEHICLE_CLASSES = ("car", "3 wheeler", "truck", "2 wheeler", "auto")
 
     def __init__(self, mode: str = "hardcoded", max_random_per_class: int = 6):
+
         self.mode = mode
         self.max_random_per_class = max_random_per_class
 
         self._hardcoded_payload: dict[str, dict[str, int]] = {
-            "north": {"car": 1, "3 wheeler": 0, "truck": 0, "2 wheeler":1, "auto":0},
-            "south": {"car": 0, "3 wheeler": 0, "truck": 0, "2 wheeler":0, "auto":0},
-            "east": {"car": 1, "3 wheeler": 0, "truck": 0, "2 wheeler":1, "auto":6},
-            "west": {"car": 1, "3 wheeler": 1, "truck": 1 , "2 wheeler":0, "auto":0},
+
+            "north": {
+                "car": 1,
+                "3 wheeler": 0,
+                "truck": 0,
+                "2 wheeler": 1,
+                "auto": 0
+            },
+
+            "south": {
+                "car": 0,
+                "3 wheeler": 0,
+                "truck": 0,
+                "2 wheeler": 0,
+                "auto": 0
+            },
+
+            "east": {
+                "car": 1,
+                "3 wheeler": 0,
+                "truck": 0,
+                "2 wheeler": 1,
+                "auto": 6
+            },
+
+            "west": {
+                "car": 1,
+                "3 wheeler": 1,
+                "truck": 1,
+                "2 wheeler": 0,
+                "auto": 0
+            },
         }
 
-        log.info("VehicleCountProvider mode=%s", self.mode)
+    def _current_payload(self) -> dict[str, dict[str, int]]:
+        if self.mode == "random":
+            return {
+                approach: {
+                    vehicle_class: random.randint(0, self.max_random_per_class)
+                    for vehicle_class in self.VEHICLE_CLASSES
+                }
+                for approach in self.APPROACHES
+            }
+
+        return self._hardcoded_payload
+
+    def get_payload(self):
+
+        return self._current_payload()
+
+    def get_total_counts(self):
+
+        payload = self._current_payload()
+
+        return {
+
+            "North": sum(
+                payload["north"].values()
+            ),
+
+            "South": sum(
+                payload["south"].values()
+            ),
+
+            "East": sum(
+                payload["east"].values()
+            ),
+
+            "West": sum(
+                payload["west"].values()
+            ),
+        }
 
     def _normalize_payload(self, payload: dict) -> dict[str, dict[str, int]]:
         normalized: dict[str, dict[str, int]] = {}
@@ -39,17 +101,7 @@ class VehicleCountProvider(CountInputProvider):
         return normalized
 
     def get_lane_class_counts(self, tls_id: str) -> dict[str, dict[str, int]]:
-        if self.mode == "random":
-            payload = {
-                approach: {
-                    vehicle_class: random.randint(0, self.max_random_per_class)
-                    for vehicle_class in self.VEHICLE_CLASSES
-                }
-                for approach in self.APPROACHES
-            }
-            return self._normalize_payload(payload)
-
-        return self._normalize_payload(self._hardcoded_payload)
+        return self._normalize_payload(self._current_payload())
 
     def get_counts(self, tls_id: str) -> dict[str, int]:
         """

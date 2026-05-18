@@ -15,6 +15,7 @@ from simulation.logic.preemption import EmergencyPreemptor
 from simulation.logic.adaptive import AdaptiveController
 from simulation.logic.spawner import DynamicSpawner
 from simulation.logic.diagnostics import _print_diagnostic_table
+from simulation.logic.gui_overlay import VehicleCountOverlay
 
 log = setup_logging("TraCI-Bridge-Modular")
 
@@ -46,6 +47,10 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
     # Cache latest counts for diagnostic display
     counts_cache: dict[str, dict] = {}
     spawn_cache: dict[str, dict[str, int]] = {}
+    
+    # Setup GUI Overlay for counts if using GUI
+    gui_overlay = VehicleCountOverlay(junction_id="junction") if cfg.use_gui else None
+    
 
     if test_mode:
         print("\n── TEST / DIAGNOSTIC MODE ACTIVE ──────────────────────────────────────────")
@@ -56,6 +61,9 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
     try:
         while traci.simulation.getMinExpectedNumber() > 0:
             traci.simulationStep()
+
+            if gui_overlay is not None:
+                gui_overlay.update_counts(count_provider.get_total_counts())
 
             # ── 1. Emergency preemption (optional) ──────────────────────────
             if cfg.use_emergency:

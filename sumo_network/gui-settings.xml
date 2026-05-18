@@ -68,6 +68,13 @@
             <polyName value="0,0,0,0"/>
         </polys>
 
+        <!-- ── POIS (Used for text overlays) ── -->
+        <pois>
+            <colorScheme name="given"/>
+            <poiSize value="0"/>
+            <poiType show="1" size="55" color="255,255,255,255"/>
+        </pois>
+
     </scheme>
 
     <!-- Start centered on junction (x=0,y=0) at zoom 500 -->
