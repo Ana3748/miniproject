@@ -5,3 +5,4 @@ models/
 assets/
 graphify-out/
 .gemini/
+*.log

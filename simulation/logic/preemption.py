@@ -52,26 +52,36 @@ class EmergencyPreemptor:
             self._activate_preemption(tls_id, next_veh)
 
     def _activate_preemption(self, tls_id: str, vehicle_id: str) -> None:
-        """Forces the signal to green for the emergency vehicle's approach."""
+        """Forces the signal to green ONLY for the emergency vehicle's approach."""
         try:
             edge_id = traci.vehicle.getRoadID(vehicle_id)
             
-            # Determine correct green phase based on approach direction
-            if "north" in edge_id or "south" in edge_id:
-                emergency_phase = 0 # N+S Green
-            elif "east" in edge_id or "west" in edge_id:
-                emergency_phase = 3 # E+W Green
+            # The state string for our junction is 24 chars long (6 per approach)
+            # Order: South, East, North, West
+            all_red = "r" * 24
+            
+            approach_state = "GGGGgg" # Full green for the chosen approach
+            
+            if "south" in edge_id:
+                state = approach_state + ("r" * 18)
+            elif "east" in edge_id:
+                state = ("r" * 6) + approach_state + ("r" * 12)
+            elif "north" in edge_id:
+                state = ("r" * 12) + approach_state + ("r" * 6)
+            elif "west" in edge_id:
+                state = ("r" * 18) + approach_state
             else:
-                emergency_phase = 0 # Fallback
+                # Fallback to NS Green (original logic) if edge unknown
+                state = "GGGGggrrrrrrGGGGggrrrrrr"
                 
-            traci.trafficlight.setPhase(tls_id, emergency_phase)
+            traci.trafficlight.setRedYellowGreenState(tls_id, state)
             # Use a very long duration; we will manually release when it passes
             traci.trafficlight.setPhaseDuration(tls_id, 9999) 
             
             self._current_tls_preempted[tls_id] = vehicle_id
             log.warning(
-                "🚨 PREEMPTION ACTIVATED  TLS=%s  vehicle=%s  phase=%d",
-                tls_id, vehicle_id, emergency_phase,
+                "🚨 PREEMPTION ACTIVATED  TLS=%s  vehicle=%s  approach=%s",
+                tls_id, vehicle_id, edge_id,
             )
         except traci.TraCIException as exc:
             log.error("Preemption failed for %s: %s", tls_id, exc)

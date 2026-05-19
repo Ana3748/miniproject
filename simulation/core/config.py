@@ -20,6 +20,8 @@ class Config:
     min_green: float = 5.0
     max_green: float = 60.0
     base_green: float = 15.0
+    extend_green: float = 15.0
+    extend_n_times: int = 3
     vehicles_per_unit: int = 5
 
     # --- Demand Source / Dynamic Spawning ---
