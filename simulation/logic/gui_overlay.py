@@ -33,7 +33,7 @@ class VehicleCountOverlay:
                     (self.junction_x - 40, self.junction_y + 70),
                     (self.junction_x - 300, self.junction_y + 70),
                 ],
-                "text_pos": (self.junction_x - 115, self.junction_y + 95),
+                "text_pos": (self.junction_x - 200, self.junction_y + 100),
                 "color": (0, 150, 255, 180),
             },
             "South": {
@@ -43,7 +43,7 @@ class VehicleCountOverlay:
                     (self.junction_x + 300, self.junction_y - 120),
                     (self.junction_x + 40, self.junction_y - 120),
                 ],
-                "text_pos": (self.junction_x + 45, self.junction_y - 95),
+                "text_pos": (self.junction_x + 200, self.junction_y - 95),
                 "color": (255, 100, 0, 180),
             },
             "East": {
@@ -53,7 +53,7 @@ class VehicleCountOverlay:
                     (self.junction_x + 300, self.junction_y + 70),
                     (self.junction_x + 70, self.junction_y + 70),
                 ],
-                "text_pos": (self.junction_x + 75, self.junction_y + 95),
+                "text_pos": (self.junction_x + 150, self.junction_y + 95),
                 "color": (0, 255, 100, 180),
             },
             "West": {
@@ -63,7 +63,7 @@ class VehicleCountOverlay:
                     (self.junction_x - 70, self.junction_y - 120),
                     (self.junction_x - 300, self.junction_y - 120),
                 ],
-                "text_pos": (self.junction_x - 145, self.junction_y - 95),
+                "text_pos": (self.junction_x - 200, self.junction_y - 95),
                 "color": (255, 220, 0, 180),
             },
         }

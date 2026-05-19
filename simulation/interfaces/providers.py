@@ -28,8 +28,8 @@ class VehicleCountProvider:
         # Reduced variety for lower density
         self._hardcoded_payload["north"].update({"Hatchback": 1, "Two-wheeler": 2})
         self._hardcoded_payload["south"].update({"Sedan": 1, "Three-wheeler": 1})
-        self._hardcoded_payload["east"].update({"SUV": 1, "Bicycle": 1})
-        self._hardcoded_payload["west"].update({"MUV": 0, "LCV": 1})
+        self._hardcoded_payload["east"].update({"SUV": 1, "Truck": 1})
+        self._hardcoded_payload["west"].update({"MUV": 1, "LCV": 1})
 
     def _current_payload(self) -> dict[str, dict[str, int]]:
         if self.mode == "random":
