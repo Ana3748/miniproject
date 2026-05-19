@@ -28,19 +28,23 @@ class DynamicSpawner:
     ROUTE_POOLS = {
         "north": [
             ("rt_north_straight", ["north_in", "south_out"]),
-            ("rt_north_turn", ["north_in", "east_out"]),
+            ("rt_north_left",     ["north_in", "east_out"]),
+            ("rt_north_right",    ["north_in", "west_out"]),
         ],
         "south": [
             ("rt_south_straight", ["south_in", "north_out"]),
-            ("rt_south_turn", ["south_in", "west_out"]),
+            ("rt_south_left",     ["south_in", "west_out"]),
+            ("rt_south_right",    ["south_in", "east_out"]),
         ],
         "east": [
-            ("rt_east_straight", ["east_in", "west_out"]),
-            ("rt_east_turn", ["east_in", "north_out"]),
+            ("rt_east_straight",  ["east_in", "west_out"]),
+            ("rt_east_left",      ["east_in", "north_out"]),
+            ("rt_east_right",     ["east_in", "south_out"]),
         ],
         "west": [
-            ("rt_west_straight", ["west_in", "east_out"]),
-            ("rt_west_turn", ["west_in", "south_out"]),
+            ("rt_west_straight",  ["west_in", "east_out"]),
+            ("rt_west_left",      ["west_in", "south_out"]),
+            ("rt_west_right",     ["west_in", "north_out"]),
         ],
     }
 
@@ -78,7 +82,9 @@ class DynamicSpawner:
 
     def _choose_route_id(self, approach: str) -> str:
         route_options = self.ROUTE_POOLS[approach]
-        return random.choice(route_options)[0]
+        # Weights: Straight=60%, Left=30%, Right=10% (matching the order in ROUTE_POOLS)
+        choice = random.choices(route_options, weights=[60, 30, 10], k=1)[0]
+        return choice[0]
 
     def spawn_for_tls(
         self,

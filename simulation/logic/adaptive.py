@@ -58,9 +58,22 @@ class AdaptiveController:
         """
         Main logic for switching signals based on PCU density.
         """
-        # Detect release of preemption to restart timers
+        # Detect release of preemption to restart timers and choose best phase
         if not preempted and self._was_preempted:
-            log.info("Adaptive: Preemption released, restarting timers.")
+            log.info("Adaptive: Preemption released, resuming with highest demand phase.")
+            
+            # Determine highest demand
+            metrics = self.get_live_metrics()
+            ns_pcu = metrics.get("north_in", {}).get("pcu", 0) + metrics.get("south_in", {}).get("pcu", 0)
+            ew_pcu = metrics.get("east_in", {}).get("pcu", 0) + metrics.get("west_in", {}).get("pcu", 0)
+            
+            if ns_pcu >= ew_pcu:
+                # Want NS Green (Phase 0). Transition through EW Yellow (Phase 4) for safety.
+                traci.trafficlight.setPhase(tls_id, 4)
+            else:
+                # Want EW Green (Phase 3). Transition through NS Yellow (Phase 1) for safety.
+                traci.trafficlight.setPhase(tls_id, 1)
+                
             self._last_phase_change_step = step
             self._extension_count = 0
             

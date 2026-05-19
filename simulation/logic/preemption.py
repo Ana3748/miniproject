@@ -93,8 +93,10 @@ class EmergencyPreemptor:
             if veh_id and veh_id in self._queue:
                 self._queue.remove(veh_id)
             
-            # Restore normal program timing
+            # Restore the default program to allow phase switching again
+            traci.trafficlight.setProgram(tls_id, "0")
             traci.trafficlight.setPhaseDuration(tls_id, self.cfg.base_green)
+            
             log.info("✅ Preemption released for TLS=%s — vehicle %s passed junction", tls_id, veh_id)
         except traci.TraCIException as exc:
             log.error("Release failed for %s: %s", tls_id, exc)
