@@ -1,71 +1,74 @@
 import traci
 import logging
-from typing import Optional
 from simulation.core.config import Config
-from simulation.core.gps import GPSSimulator
-from simulation.core.utils import euclidean_distance, get_tls_junction_position
 
 log = logging.getLogger("TraCI-Bridge-Backup")
 
 class EmergencyPreemptor:
-    def __init__(self, cfg: Config, gps_sim: GPSSimulator):
+    def __init__(self, cfg: Config):
         self.cfg = cfg
-        self.gps = gps_sim
-        self._preempted: dict[str, bool] = {}
-        self._preempt_start: dict[str, int] = {}
+        self._queue: list[str] = [] # List of active emergency vehicle IDs
+        self._current_tls_preempted: dict[str, str] = {} # tls_id -> veh_id
+        
+    def add_emergency(self, veh_id: str):
+        """Adds a new emergency vehicle to the FCFS queue."""
+        if veh_id not in self._queue:
+            self._queue.append(veh_id)
+            log.info("🚨 Emergency vehicle %s added to FCFS queue", veh_id)
+
+    def is_preempted(self, tls_id: str) -> bool:
+        """Returns True if the traffic light is currently under emergency preemption."""
+        return tls_id in self._current_tls_preempted
 
     def step(self, sim_step: int) -> None:
-        active_vehicles = [
-            v for v in traci.vehicle.getIDList()
-            if traci.vehicle.getTypeID(v) == self.cfg.emergency_vehicle_type
-        ]
-        for vid in active_vehicles:
-            true_pos = traci.vehicle.getPosition(vid)
-            self.gps.update(vid, true_pos[0], true_pos[1])
-
-        for tls_id in traci.trafficlight.getIDList():
-            junction_pos = get_tls_junction_position(tls_id)
-            if junction_pos is None:
-                continue
-
-            nearest_ev, nearest_dist = self._nearest_emergency(active_vehicles, junction_pos)
-            already_preempted = self._preempted.get(tls_id, False)
-
-            if nearest_ev is not None and nearest_dist <= self.cfg.preemption_radius_m:
-                if not already_preempted:
-                    self._activate_preemption(tls_id, nearest_ev, sim_step)
-            elif already_preempted:
-                elapsed = (sim_step - self._preempt_start[tls_id]) * self.cfg.step_length
-                if elapsed >= self.cfg.preemption_green_duration:
+        """
+        Main step logic for handling the emergency queue and releasing preemption.
+        """
+        all_vehs = traci.vehicle.getIDList()
+        
+        # Cleanup queue for vehicles that might have been removed from simulation
+        self._queue = [vid for vid in self._queue if vid in all_vehs]
+        
+        tls_id = self.cfg.junction_id
+        
+        # 1. Check if the current preempting vehicle has passed the junction
+        if tls_id in self._current_tls_preempted:
+            target_veh = self._current_tls_preempted[tls_id]
+            
+            if target_veh not in all_vehs:
+                self._release_preemption(tls_id)
+            else:
+                try:
+                    curr_edge = traci.vehicle.getRoadID(target_veh)
+                    # Release as soon as it enters an outgoing edge
+                    if curr_edge.endswith("_out"):
+                        self._release_preemption(tls_id)
+                except traci.TraCIException:
                     self._release_preemption(tls_id)
+        
+        # 2. If no preemption is active but the queue has vehicles, activate for the first one
+        if tls_id not in self._current_tls_preempted and self._queue:
+            next_veh = self._queue[0]
+            self._activate_preemption(tls_id, next_veh)
 
-    def _nearest_emergency(self, vehicles: list[str], junction_pos: tuple) -> tuple[Optional[str], float]:
-        nearest_id = None
-        nearest_dist = float("inf")
-        for vid in vehicles:
-            reported = self.gps.get_reported_position(vid)
-            if reported is None:
-                continue
-            dist = euclidean_distance(reported, junction_pos)
-            if dist < nearest_dist:
-                nearest_dist = dist
-                nearest_id = vid
-        return nearest_id, nearest_dist
-
-    def _activate_preemption(self, tls_id: str, vehicle_id: str, sim_step: int) -> None:
+    def _activate_preemption(self, tls_id: str, vehicle_id: str) -> None:
+        """Forces the signal to green for the emergency vehicle's approach."""
         try:
             edge_id = traci.vehicle.getRoadID(vehicle_id)
-            if edge_id in ["north_in", "south_in"]:
-                emergency_phase = 0
-            elif edge_id in ["east_in", "west_in"]:
-                emergency_phase = 3
+            
+            # Determine correct green phase based on approach direction
+            if "north" in edge_id or "south" in edge_id:
+                emergency_phase = 0 # N+S Green
+            elif "east" in edge_id or "west" in edge_id:
+                emergency_phase = 3 # E+W Green
             else:
-                emergency_phase = self.cfg.tls_emergency_phase.get(tls_id, 0)
+                emergency_phase = 0 # Fallback
                 
             traci.trafficlight.setPhase(tls_id, emergency_phase)
-            traci.trafficlight.setPhaseDuration(tls_id, self.cfg.preemption_green_duration)
-            self._preempted[tls_id] = True
-            self._preempt_start[tls_id] = sim_step
+            # Use a very long duration; we will manually release when it passes
+            traci.trafficlight.setPhaseDuration(tls_id, 9999) 
+            
+            self._current_tls_preempted[tls_id] = vehicle_id
             log.warning(
                 "🚨 PREEMPTION ACTIVATED  TLS=%s  vehicle=%s  phase=%d",
                 tls_id, vehicle_id, emergency_phase,
@@ -74,9 +77,14 @@ class EmergencyPreemptor:
             log.error("Preemption failed for %s: %s", tls_id, exc)
 
     def _release_preemption(self, tls_id: str) -> None:
+        """Releases the preemption and restores normal adaptive control."""
         try:
-            traci.trafficlight.setProgram(tls_id, "0")
-            self._preempted[tls_id] = False
-            log.info("✅ Preemption released for TLS=%s — normal program restored", tls_id)
+            veh_id = self._current_tls_preempted.pop(tls_id, None)
+            if veh_id and veh_id in self._queue:
+                self._queue.remove(veh_id)
+            
+            # Restore normal program timing
+            traci.trafficlight.setPhaseDuration(tls_id, self.cfg.base_green)
+            log.info("✅ Preemption released for TLS=%s — vehicle %s passed junction", tls_id, veh_id)
         except traci.TraCIException as exc:
             log.error("Release failed for %s: %s", tls_id, exc)

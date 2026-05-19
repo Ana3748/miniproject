@@ -9,11 +9,20 @@ log = logging.getLogger("TraCI-Bridge-Modular")
 
 class DynamicSpawner:
     TYPE_MAP = {
-        "car": "car",
-        "3 wheeler": "threewheeler",
-        "truck": "truck",
-        "2 wheeler": "twowheeler",
-        "auto":"autorickshaw"
+        "Hatchback": "car",
+        "Sedan": "car",
+        "SUV": "car",
+        "MUV": "car",
+        "Bus": "bus",
+        "Truck": "truck",
+        "Three-wheeler": "threewheeler",
+        "Two-wheeler": "twowheeler",
+        "LCV": "truck",
+        "Mini-bus": "bus",
+        "Tempo-traveller": "bus",
+        "Bicycle": "bicycle",
+        "Van": "car",
+        "Others": "car"
     }
 
     ROUTE_POOLS = {
@@ -39,17 +48,28 @@ class DynamicSpawner:
         self.cfg = cfg
         self._seq = 0
         self._routes_ready = False
+        self._types_ready = False
 
-    def _ensure_routes(self) -> None:
-        if self._routes_ready:
-            return
-
-        existing_routes = set(traci.route.getIDList())
-        for route_options in self.ROUTE_POOLS.values():
-            for route_id, edges in route_options:
-                if route_id not in existing_routes:
-                    traci.route.add(route_id, edges)
-        self._routes_ready = True
+    def _ensure_resources(self) -> None:
+        if not self._routes_ready:
+            existing_routes = set(traci.route.getIDList())
+            for route_options in self.ROUTE_POOLS.values():
+                for route_id, edges in route_options:
+                    if route_id not in existing_routes:
+                        traci.route.add(route_id, edges)
+            self._routes_ready = True
+        
+        if not self._types_ready:
+            existing_types = set(traci.vehicletype.getIDList())
+            for cls_name, base_type in self.TYPE_MAP.items():
+                type_id = cls_name.replace(" ", "")
+                if type_id not in existing_types:
+                    try:
+                        traci.vehicletype.copy(base_type, type_id)
+                        # Optionally adjust parameters for realism (e.g. length)
+                    except traci.TraCIException:
+                        pass
+            self._types_ready = True
 
     def _next_vehicle_id(self, vehicle_class: str, step: int) -> str:
         self._seq += 1
@@ -66,7 +86,7 @@ class DynamicSpawner:
         lane_class_counts: dict[str, dict[str, int]],
         step: int,
     ) -> dict[str, dict[str, int]]:
-        self._ensure_routes()
+        self._ensure_resources()
 
         stats = {
             "requested": 0,
@@ -83,11 +103,8 @@ class DynamicSpawner:
                 if requested == 0:
                     continue
 
-                type_id = self.TYPE_MAP.get(vehicle_class)
-                if not type_id:
-                    log.warning("Skipping unknown class '%s' for %s", vehicle_class, tls_id)
-                    continue
-
+                type_id = vehicle_class.replace(" ", "")
+                
                 for _ in range(requested):
                     stats["requested"] += 1
                     veh_id = self._next_vehicle_id(vehicle_class, step)

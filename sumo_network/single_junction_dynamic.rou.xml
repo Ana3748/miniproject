@@ -17,10 +17,11 @@
     <vType id="autorickshaw" vClass="moped" guiShape="delivery"
            color="255,215,0" length="2.6" width="1.3" maxSpeed="12.5"/>
 
-    <vehicle id="ev0" type="emergency" depart="10">
-        <route edges="west_in east_out"/>
-    </vehicle>
-    <vehicle id="ev1" type="emergency" depart="75">
-        <route edges="north_in east_out"/>
-    </vehicle>
+    <!-- Background flow to keep simulation alive -->
+    <flow id="background_ns" type="car" begin="0" end="3600" vehsPerHour="30" departLane="best" departSpeed="max">
+        <route edges="north_in south_out"/>
+    </flow>
+    <flow id="background_ew" type="car" begin="0" end="3600" vehsPerHour="30" departLane="best" departSpeed="max">
+        <route edges="east_in west_out"/>
+    </flow>
 </routes>

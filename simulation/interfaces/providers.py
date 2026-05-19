@@ -9,47 +9,27 @@ log = logging.getLogger("TraCI-Bridge-Modular")
 class VehicleCountProvider:
 
     APPROACHES = ("north", "south", "east", "west")
-    VEHICLE_CLASSES = ("car", "3 wheeler", "truck", "2 wheeler", "auto")
+    VEHICLE_CLASSES = (
+        "Hatchback", "Sedan", "SUV", "MUV", "Bus", "Truck",
+        "Three-wheeler", "Two-wheeler", "LCV", "Mini-bus",
+        "Tempo-traveller", "Bicycle", "Van", "Others"
+    )
 
-    def __init__(self, mode: str = "hardcoded", max_random_per_class: int = 6):
+    def __init__(self, mode: str = "hardcoded", max_random_per_class: int = 1):
 
         self.mode = mode
         self.max_random_per_class = max_random_per_class
 
         self._hardcoded_payload: dict[str, dict[str, int]] = {
-
-            "north": {
-                "car": 1,
-                "3 wheeler": 0,
-                "truck": 0,
-                "2 wheeler": 1,
-                "auto": 0
-            },
-
-            "south": {
-                "car": 0,
-                "3 wheeler": 0,
-                "truck": 0,
-                "2 wheeler": 0,
-                "auto": 0
-            },
-
-            "east": {
-                "car": 1,
-                "3 wheeler": 0,
-                "truck": 0,
-                "2 wheeler": 1,
-                "auto": 6
-            },
-
-            "west": {
-                "car": 1,
-                "3 wheeler": 1,
-                "truck": 1,
-                "2 wheeler": 0,
-                "auto": 0
-            },
+            approach: {cls: 0 for cls in self.VEHICLE_CLASSES}
+            for approach in self.APPROACHES
         }
+        
+        # Reduced variety for lower density
+        self._hardcoded_payload["north"].update({"Hatchback": 1, "Two-wheeler": 2})
+        self._hardcoded_payload["south"].update({"Sedan": 1, "Three-wheeler": 1})
+        self._hardcoded_payload["east"].update({"SUV": 1, "Bicycle": 1})
+        self._hardcoded_payload["west"].update({"MUV": 1, "LCV": 1})
 
     def _current_payload(self) -> dict[str, dict[str, int]]:
         if self.mode == "random":

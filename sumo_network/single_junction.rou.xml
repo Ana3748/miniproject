@@ -21,66 +21,53 @@
     ════════════════════════════════════════════════════════════════════ -->
 
     <!-- North → South  (straight through) -->
-    <flow id="f_NS"  type="car"  begin="0" end="3600" vehsPerHour="180" departLane="best" departSpeed="max">
+    <flow id="f_NS"  type="car"  begin="0" end="3600" vehsPerHour="50" departLane="best" departSpeed="max">
         <route edges="north_in south_out"/>
     </flow>
-    <flow id="f_NS2" type="car2" begin="0" end="3600" vehsPerHour="120" departLane="best" departSpeed="max">
+    <flow id="f_NS2" type="car2" begin="0" end="3600" vehsPerHour="30" departLane="best" departSpeed="max">
         <route edges="north_in south_out"/>
     </flow>
 
     <!-- South → North  (straight through) -->
-    <flow id="f_SN"  type="car"  begin="0" end="3600" vehsPerHour="150" departLane="best" departSpeed="max">
+    <flow id="f_SN"  type="car"  begin="0" end="3600" vehsPerHour="40" departLane="best" departSpeed="max">
         <route edges="south_in north_out"/>
     </flow>
-    <flow id="f_SN2" type="car3" begin="0" end="3600" vehsPerHour="100" departLane="best" departSpeed="max">
+    <flow id="f_SN2" type="car3" begin="0" end="3600" vehsPerHour="20" departLane="best" departSpeed="max">
         <route edges="south_in north_out"/>
     </flow>
 
     <!-- East → West  (straight through) -->
-    <flow id="f_EW"  type="car3" begin="0" end="3600" vehsPerHour="200" departLane="best" departSpeed="max">
+    <flow id="f_EW"  type="car3" begin="0" end="3600" vehsPerHour="60" departLane="best" departSpeed="max">
         <route edges="east_in west_out"/>
     </flow>
-    <flow id="f_EW2" type="car"  begin="0" end="3600" vehsPerHour="130" departLane="best" departSpeed="max">
+    <flow id="f_EW2" type="car"  begin="0" end="3600" vehsPerHour="40" departLane="best" departSpeed="max">
         <route edges="east_in west_out"/>
     </flow>
 
-    <!-- West → East  (straight through) — also the emergency corridor -->
-    <flow id="f_WE"  type="car2" begin="0" end="3600" vehsPerHour="220" departLane="best" departSpeed="max">
+    <!-- West → East  (straight through) -->
+    <flow id="f_WE"  type="car2" begin="0" end="3600" vehsPerHour="60" departLane="best" departSpeed="max">
         <route edges="west_in east_out"/>
     </flow>
-    <flow id="f_WE2" type="car3" begin="0" end="3600" vehsPerHour="110" departLane="best" departSpeed="max">
+    <flow id="f_WE2" type="car3" begin="0" end="3600" vehsPerHour="30" departLane="best" departSpeed="max">
         <route edges="west_in east_out"/>
     </flow>
 
     <!-- ── Turning flows ──────────────────────────────────────────────── -->
     <!-- North → East (right turn) -->
-    <flow id="f_NE" type="car"  begin="0" end="3600" vehsPerHour="60" departLane="best" departSpeed="max">
+    <flow id="f_NE" type="car"  begin="0" end="3600" vehsPerHour="20" departLane="best" departSpeed="max">
         <route edges="north_in east_out"/>
     </flow>
     <!-- South → West (right turn) -->
-    <flow id="f_SW" type="car2" begin="0" end="3600" vehsPerHour="60" departLane="best" departSpeed="max">
+    <flow id="f_SW" type="car2" begin="0" end="3600" vehsPerHour="20" departLane="best" departSpeed="max">
         <route edges="south_in west_out"/>
     </flow>
     <!-- East → North (left turn) -->
-    <flow id="f_EN" type="car3" begin="0" end="3600" vehsPerHour="50" departLane="best" departSpeed="max">
+    <flow id="f_EN" type="car3" begin="0" end="3600" vehsPerHour="15" departLane="best" departSpeed="max">
         <route edges="east_in north_out"/>
     </flow>
     <!-- West → South (left turn) -->
-    <flow id="f_WS" type="car"  begin="0" end="3600" vehsPerHour="50" departLane="best" departSpeed="max">
+    <flow id="f_WS" type="car"  begin="0" end="3600" vehsPerHour="15" departLane="best" departSpeed="max">
         <route edges="west_in south_out"/>
     </flow>
 
-    <!-- ═══════════════════════════════════════════════════════════════════
-         EMERGENCY VEHICLE
-         Departs at t=100s so you can first observe normal TLS cycling,
-         then see preemption kick in when it approaches the junction.
-         Travels west_in → east_out (phase 3 = green for this corridor).
-    ════════════════════════════════════════════════════════════════════ -->
-    <vehicle id="ev0" type="emergency" depart="10">
-        <route edges="west_in east_out"/>
-    </vehicle>
-    <vehicle id="ev1" type="emergency" depart="75">
-        <route edges="north_in east_out"/>
-    </vehicle>
-
-</routes>
+    </routes>
