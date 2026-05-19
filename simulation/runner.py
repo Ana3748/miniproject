@@ -15,6 +15,7 @@ from simulation.logic.preemption import EmergencyPreemptor
 from simulation.logic.adaptive import AdaptiveController
 from simulation.logic.spawner import DynamicSpawner
 from simulation.logic.gui_overlay import VehicleCountOverlay
+from vision.single_frame import get_yolo_counts
 
 log = setup_logging("TraCI-Bridge-Modular")
 
@@ -64,7 +65,7 @@ def keyboard_listener(preemptor: EmergencyPreemptor, cfg: Config):
         except EOFError:
             break
 
-def run_simulation(cfg: Config, test_mode: bool = False) -> None:
+def run_simulation(cfg: Config, yolo_payload: dict = None) -> None:
     active_sumo_cfg = cfg.sumo_cfg
     dynamic_enabled = cfg.demand_source == "dynamic_python"
     if dynamic_enabled:
@@ -82,7 +83,10 @@ def run_simulation(cfg: Config, test_mode: bool = False) -> None:
     log.info("Starting SUMO: %s", " ".join(sumo_cmd))
     traci.start(sumo_cmd)
 
-    count_provider = VehicleCountProvider(mode=cfg.spawn_provider_mode)
+    count_provider = VehicleCountProvider(
+        mode=cfg.spawn_provider_mode,
+        yolo_payload=yolo_payload
+    )
     spawner = DynamicSpawner(cfg) if dynamic_enabled else None
     preemptor = EmergencyPreemptor(cfg)
     adaptive  = AdaptiveController(cfg)
@@ -147,13 +151,19 @@ if __name__ == "__main__":
     parser.add_argument("--gui", action="store_true", help="Launch sumo-gui")
     parser.add_argument("--config", default="sumo_network/single_junction.sumocfg", help="SUMO config")
     parser.add_argument("--dynamic", action="store_true", help="Enable dynamic python spawning")
+    parser.add_argument("--yolo", action="store_true", help="Use YOLO to detect initial traffic demand")
     args = parser.parse_args()
 
     # Create config based on arguments
     cfg = Config(
         sumo_cfg=args.config,
         use_gui=args.gui,
-        demand_source="dynamic_python" if args.dynamic else "static_xml",
+        demand_source="dynamic_python" if (args.dynamic or args.yolo) else "static_xml",
+        spawn_provider_mode="yolo" if args.yolo else "hardcoded"
     )
     
-    run_simulation(cfg)
+    yolo_payload = None
+    if args.yolo:
+        yolo_payload = get_yolo_counts()
+    
+    run_simulation(cfg, yolo_payload=yolo_payload)

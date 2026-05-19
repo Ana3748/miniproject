@@ -15,10 +15,11 @@ class VehicleCountProvider:
         "Tempo-traveller", "Bicycle", "Van", "Others"
     )
 
-    def __init__(self, mode: str = "hardcoded", max_random_per_class: int = 1):
+    def __init__(self, mode: str = "hardcoded", max_random_per_class: int = 1, yolo_payload: dict = None):
 
         self.mode = mode
         self.max_random_per_class = max_random_per_class
+        self._yolo_payload = yolo_payload
 
         self._hardcoded_payload: dict[str, dict[str, int]] = {
             approach: {cls: 0 for cls in self.VEHICLE_CLASSES}
@@ -28,8 +29,8 @@ class VehicleCountProvider:
         # Reduced variety for lower density
         self._hardcoded_payload["north"].update({"Hatchback": 1, "Two-wheeler": 2})
         self._hardcoded_payload["south"].update({"Sedan": 1, "Three-wheeler": 1})
-        self._hardcoded_payload["east"].update({"SUV": 1, "Truck": 1})
-        self._hardcoded_payload["west"].update({"MUV": 1, "LCV": 1})
+        self._hardcoded_payload["east"].update({"SUV": 1, "Bicycle": 1})
+        self._hardcoded_payload["west"].update({"MUV": 0, "LCV": 1})
 
     def _current_payload(self) -> dict[str, dict[str, int]]:
         if self.mode == "random":
@@ -40,6 +41,9 @@ class VehicleCountProvider:
                 }
                 for approach in self.APPROACHES
             }
+        
+        if self.mode == "yolo" and self._yolo_payload:
+            return self._yolo_payload
 
         return self._hardcoded_payload
 

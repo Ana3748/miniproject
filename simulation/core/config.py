@@ -27,8 +27,8 @@ class Config:
     # --- Demand Source / Dynamic Spawning ---
     demand_source: str = "static_xml"      # static_xml | dynamic_python
     dynamic_sumo_cfg: str = "sumo_network/single_junction_dynamic.sumocfg"
-    spawn_provider_mode: str = "hardcoded" # hardcoded | random
-    spawn_interval_s: float = 10.0
+    spawn_provider_mode: str = "hardcoded" # hardcoded | random | yolo
+    spawn_interval_s: float = 100.0
     spawn_max_per_class_per_lane: int = 10
 
     # --- Indian Vehicle Classes & PCU Mapping ---
