@@ -1,6 +1,7 @@
 # vision/single_frame.py
 import cv2
 import logging
+import os
 from vision import utils, detector, config
 
 log = logging.getLogger("Vision-SingleFrame")
@@ -57,11 +58,15 @@ def get_yolo_counts() -> dict[str, dict[str, int]]:
         total = sum(counts.values())
         log.info(f"Detected in {dir_name.upper()}: {total} vehicles.")
 
-    # 3. Verification Display
+    # 3. Save Verification Display
     if annotated_frames:
         canvas = utils.create_grid(annotated_frames, final_counts)
-        cv2.imshow("YOLO Verification - Press any key to continue to SUMO", canvas)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        output_path = os.path.join(config.OUTPUTS_DIR, "yolo_initial_detection.jpg")
+        
+        if not os.path.exists(config.OUTPUTS_DIR):
+            os.makedirs(config.OUTPUTS_DIR)
+            
+        cv2.imwrite(output_path, canvas)
+        log.info(f"YOLO verification image saved to: {output_path}")
         
     return final_counts
