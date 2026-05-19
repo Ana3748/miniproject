@@ -17,6 +17,14 @@
     <vType id="autorickshaw" vClass="moped" guiShape="delivery"
            color="255,215,0" length="2.6" width="1.3" maxSpeed="12.5"/>
 
+    <!-- New: Bus -->
+    <vType id="bus" vClass="bus" guiShape="bus"
+           color="0,0,255" length="12.0" width="2.5" maxSpeed="15.0"/>
+
+    <!-- New: Bicycle -->
+    <vType id="bicycle" vClass="bicycle" guiShape="bicycle"
+           color="255,0,255" length="1.6" width="0.6" maxSpeed="5.5"/>
+
     <!-- Background flow to keep simulation alive -->
     <flow id="background_ns" type="car" begin="0" end="3600" vehsPerHour="30" departLane="best" departSpeed="max">
         <route edges="north_in south_out"/>

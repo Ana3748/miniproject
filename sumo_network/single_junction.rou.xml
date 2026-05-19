@@ -14,6 +14,13 @@
            color="255,0,0" length="6.5" width="2.4" maxSpeed="22.0"
            emergencyDecel="9.0" speedFactor="1.5"/>
 
+    <!-- Additional types for YOLO mapping -->
+    <vType id="truck" vClass="truck" guiShape="truck" color="128,128,128" length="7.5" width="2.5" maxSpeed="11.5"/>
+    <vType id="bus" vClass="bus" guiShape="bus" color="0,0,255" length="12.0" width="2.5" maxSpeed="15.0"/>
+    <vType id="bicycle" vClass="bicycle" guiShape="bicycle" color="255,0,255" length="1.6" width="0.6" maxSpeed="5.5"/>
+    <vType id="threewheeler" vClass="moped" guiShape="motorcycle" color="255,165,0" length="2.2" width="1.2" maxSpeed="11.0"/>
+    <vType id="twowheeler" vClass="motorcycle" guiShape="motorcycle" color="50,205,50" length="1.8" width="0.8" maxSpeed="16.6"/>
+
     <!-- ═══════════════════════════════════════════════════════════════════
          CONTINUOUS FLOWS — vehicles spawn every N seconds for full 3600s
          vehsPerHour: roughly how many vehicles per hour on that approach
