@@ -34,7 +34,7 @@ The controller manages a standard 6-phase cycle but dynamically adjusts the dura
 - **Phase 1:** North-South Yellow
 - **Phase 2:** All Red
 - **Phase 3:** East-West Green
-- **Phase 4:** East-West Yellow
+- **Phase 4:** East-West     Yellow
 - **Phase 5:** All Red
 
 ### Decision Logic Flowchart
