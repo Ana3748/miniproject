@@ -79,6 +79,10 @@ def main():
                     canvas = utils.create_grid(frames_to_display, current_counts)
                     cv2.imshow(config.WINDOW_NAME, canvas)
 
+                # Keep the JSON snapshot in sync with the latest visible counts.
+                total_counts = {d: sum(c.values()) for d, c in current_counts.items()}
+                exporter.export_counts(total_counts)
+
             key = cv2.waitKey(config.MIN_FRAME_DELAY_MS) & 0xFF
             if key == ord('q'):
                 break
