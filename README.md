@@ -1,9 +1,7 @@
 # Vision Based Adaptive Traffic Control with GPS Emergency Preemption
 
-![Status](https://img.shields.io/badge/status-placeholder-lightgrey)
 ![Python](https://img.shields.io/badge/python-3.x-blue)
 ![SUMO](https://img.shields.io/badge/sumo-traCI-orange)
-![License](https://img.shields.io/badge/license-TBD-lightgrey)
 
 An adaptive traffic management system that combines computer vision, SUMO/TraCI simulation, and emergency preemption logic to replace fixed-time signal control with real-time, demand-aware signal allocation.
 
