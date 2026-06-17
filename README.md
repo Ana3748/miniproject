@@ -393,8 +393,3 @@ The same config file also defines the vehicle class list, PCU weights, SUMO vCla
 - Expose more runtime options for demand source selection and spawn safety caps.
 - Expand the simulation beyond a single junction.
 - Optimize the edge path for Jetson Nano deployment.
-- Add a repository license before public redistribution.
-
-## License
-
-No license file is present in the repository at the moment. Add a license before publishing the code for reuse or redistribution.
